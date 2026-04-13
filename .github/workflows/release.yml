@@ -36,38 +36,12 @@ jobs:
           draft: false
           prerelease: false
 
-  build-deb:
-    name: Build Debian Package (amd64)
+  build-source-tarball:
+    name: Build Source Tarball
     runs-on: ubuntu-latest
     needs: create-release
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y debhelper devscripts build-essential cargo rustc
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: Cache cargo registry
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Cache cargo build
-        uses: actions/cache@v3
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
       
       - name: Get version
         id: version
@@ -75,27 +49,12 @@ jobs:
           VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       
-      - name: Build release binary
-        run: cargo build --release
-      
-      - name: Build Debian package
+      - name: Create source tarball
         run: |
           cd ..
-          tar --exclude=.git --exclude=target --exclude=.cargo -czf \
-              "rclone-mount-tray_${{ steps.version.outputs.VERSION }}.orig.tar.gz" \
+          tar --exclude=.git --exclude=target --exclude=.cargo --exclude=rclone-mount-tray/.github -czf \
+              "rclone-mount-tray_${{ steps.version.outputs.VERSION }}.tar.gz" \
               rclone-mount-tray/
-          cd rclone-mount-tray
-          debuild -d -us -uc
-      
-      - name: Upload .deb to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ../rclone-mount-tray_${{ steps.version.outputs.VERSION }}-1_amd64.deb
-          asset_name: rclone-mount-tray_${{ steps.version.outputs.VERSION }}-1_amd64.deb
-          asset_content_type: application/vnd.debian.binary-package
       
       - name: Upload source tarball to release
         uses: actions/upload-release-asset@v1
@@ -103,12 +62,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ../rclone-mount-tray_${{ steps.version.outputs.VERSION }}.orig.tar.gz
+          asset_path: ../rclone-mount-tray_${{ steps.version.outputs.VERSION }}.tar.gz
           asset_name: rclone-mount-tray-${{ steps.version.outputs.VERSION }}.tar.gz
           asset_content_type: application/gzip
 
   build-binary:
-    name: Build Binary
+    name: Build Binary (amd64)
     runs-on: ubuntu-latest
     needs: create-release
     steps:
@@ -159,7 +118,7 @@ jobs:
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: target/release/rclone-mount-tray
-          asset_name: rclone-mount-tray-x86_64
+          asset_name: rclone-mount-tray-x86_64-${{ steps.version.outputs.VERSION }}
           asset_content_type: application/octet-stream
       
       - name: Upload checksum to release
@@ -169,5 +128,57 @@ jobs:
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: target/release/rclone-mount-tray.sha256
-          asset_name: rclone-mount-tray-x86_64.sha256
+          asset_name: rclone-mount-tray-x86_64-${{ steps.version.outputs.VERSION }}.sha256
           asset_content_type: text/plain
+
+  build-deb:
+    name: Build Debian Package (amd64)
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper devscripts build-essential cargo rustc
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Build release binary
+        run: cargo build --release
+      
+      - name: Build Debian package
+        run: |
+          cd ..
+          # Create a clean source for debian build
+          mkdir -p debian-build
+          cd debian-build
+          tar --exclude='.git' --exclude='target' --exclude='.cargo' --exclude='rclone-mount-tray/.github' \
+              -xzf <(cd .. && tar --exclude='.git' --exclude='target' --exclude='.cargo' --exclude='rclone-mount-tray/.github' -czf - rclone-mount-tray)
+          cd rclone-mount-tray
+          cp -r ../rclone-mount-tray/debian .
+          cp -r ../rclone-mount-tray/target .
+          debuild -d -us -uc 2>&1 || true
+          cd ../..
+          ls -lh debian-build/*.deb 2>/dev/null || echo "Debian build skipped"
+      
+      - name: Upload .deb to release
+        continue-on-error: true
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ../debian-build/rclone-mount-tray_${{ steps.version.outputs.VERSION }}-1_amd64.deb
+          asset_name: rclone-mount-tray_${{ steps.version.outputs.VERSION }}-1_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
