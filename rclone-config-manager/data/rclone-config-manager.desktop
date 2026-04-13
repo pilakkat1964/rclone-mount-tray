@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=RClone Config Manager
+Comment=Manage rclone mount configurations and authentication
+Icon=system-file-manager
+Exec=rclone-config-manager
+Categories=System;Utility;
+Terminal=false
+StartupNotify=true

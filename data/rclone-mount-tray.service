@@ -1,0 +1,16 @@
+[Unit]
+Description=RClone Mount Manager System Tray Applet
+Documentation=https://github.com/rclone/rclone
+After=graphical-session-pre.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/rclone-mount-tray
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

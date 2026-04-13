@@ -1,0 +1,29 @@
+[package]
+name = "rclone-mount-tray"
+version = "0.1.0"
+edition = "2021"
+authors = ["RClone Tray Contributors"]
+description = "System tray applet for on-demand rclone mount management"
+license = "MIT"
+
+[dependencies]
+# Async runtime (full features for blocking operations)
+tokio = { version = "1.37", features = ["rt-multi-thread", "macros", "process"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Error handling
+anyhow = "1.0"
+
+# File operations
+dirs = "5.0"
+
+[profile.release]
+opt-level = 3
+lto = true

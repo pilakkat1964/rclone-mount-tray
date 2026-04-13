@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=RClone Mount Manager
+Comment=System tray applet for on-demand rclone mount management
+Icon=folder-remote
+Exec=rclone-mount-tray
+Terminal=false
+Categories=Utility;System;FileManager;
+Keywords=rclone;mount;gdrive;
+StartupNotify=true
+X-GNOME-Autostart-enabled=true
