@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+
+# Hardening flags for security
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cargo build --release --locked
+
+override_dh_auto_test:
+	cargo test --release --locked
+
+override_dh_install:
+	dh_install
+	mkdir -p debian/rclone-mount-tray/usr/bin
+	mkdir -p debian/rclone-mount-tray/usr/share/applications
+	mkdir -p debian/rclone-mount-tray/usr/lib/systemd/user
+	mkdir -p debian/rclone-mount-tray/usr/share/doc/rclone-mount-tray
+	install -m 755 target/release/rclone-mount-tray debian/rclone-mount-tray/usr/bin/
+	install -m 644 data/rclone-mount-tray.desktop debian/rclone-mount-tray/usr/share/applications/
+	install -m 644 data/rclone-mount-tray.service debian/rclone-mount-tray/usr/lib/systemd/user/
+	install -m 644 README.md debian/rclone-mount-tray/usr/share/doc/rclone-mount-tray/
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

@@ -1,0 +1,170 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ env.VERSION }}
+    steps:
+      - name: Get version from tag
+        id: tag_name
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+  build-deb:
+    name: Build Debian Package (amd64)
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper-compat cargo rustc
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Build release binary
+        run: cargo build --release
+      
+      - name: Build Debian package
+        run: |
+          cd ..
+          tar --exclude=.git --exclude=target --exclude=.cargo -czf \
+              "rclone-mount-tray_${{ steps.version.outputs.VERSION }}.orig.tar.gz" \
+              rclone-mount-tray/
+          cd rclone-mount-tray
+          debuild -d -us -uc
+      
+      - name: Upload .deb to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ../rclone-mount-tray_${{ steps.version.outputs.VERSION }}-1_amd64.deb
+          asset_name: rclone-mount-tray_${{ steps.version.outputs.VERSION }}-1_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+      
+      - name: Upload source tarball to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ../rclone-mount-tray_${{ steps.version.outputs.VERSION }}.orig.tar.gz
+          asset_name: rclone-mount-tray-${{ steps.version.outputs.VERSION }}.tar.gz
+          asset_content_type: application/gzip
+
+  build-binary:
+    name: Build Binary
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\([^"]*\)".*/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Build release binary
+        run: cargo build --release
+      
+      - name: Strip binary
+        run: strip target/release/rclone-mount-tray
+      
+      - name: Generate checksum
+        run: |
+          cd target/release
+          sha256sum rclone-mount-tray > rclone-mount-tray.sha256
+      
+      - name: Upload binary to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: target/release/rclone-mount-tray
+          asset_name: rclone-mount-tray-x86_64
+          asset_content_type: application/octet-stream
+      
+      - name: Upload checksum to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: target/release/rclone-mount-tray.sha256
+          asset_name: rclone-mount-tray-x86_64.sha256
+          asset_content_type: text/plain

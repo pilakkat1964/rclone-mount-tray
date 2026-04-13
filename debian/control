@@ -1,0 +1,28 @@
+Source: rclone-mount-tray
+Section: utils
+Priority: optional
+Maintainer: RClone Tray Contributors <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               cargo,
+               rustc
+Standards-Version: 4.6.0
+Homepage: https://github.com/pilakkat1964/rclone-mount-tray
+Vcs-Git: https://github.com/pilakkat1964/rclone-mount-tray.git
+Vcs-Browser: https://github.com/pilakkat1964/rclone-mount-tray
+
+Package: rclone-mount-tray
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         rclone,
+         systemd
+Description: System tray applet for on-demand rclone mount management
+ RClone Mount Manager provides a lightweight system tray applet
+ and GTK4-based GUI for managing rclone mounts on Linux.
+ .
+ Features:
+  - System tray integration for quick mount control
+  - Real-time mount status monitoring
+  - One-click mount/unmount from tray menu
+  - Modern GTK4-based configuration manager
+  - Minimal resource usage

@@ -1,0 +1,9 @@
+rclone-mount-tray (0.1.0-1) jammy; urgency=medium
+
+  * Initial release
+  * System tray applet for rclone mount management
+  * GTK4-based configuration manager
+  * Real-time mount status monitoring
+  * One-click mount/unmount functionality
+
+ -- RClone Tray Contributors <noreply@github.com>  Mon, 14 Apr 2025 00:00:00 +0000
