@@ -719,19 +719,72 @@ curl -I https://pilakkat.mywire.org/z-rclone-mount-applete/
 
 ---
 
+## Recent Session Updates (Priority 5: Crates.io Publishing)
+
+### ✅ Completed: Crates.io Publishing Setup (April 16, 2026)
+
+**Changes Applied:**
+
+1. **Cargo.toml Metadata Completion (Critical Fixes)**
+   - Added missing repository field (CRITICAL): `https://github.com/pilakkat1964/z-rclone-mount-applete`
+   - Added missing documentation field (CRITICAL): `https://docs.rs/rclone-mount-tray` for automated Rust documentation
+   - Added missing readme field: `README.md` for Crates.io display
+   - Added homepage field: `https://github.com/pilakkat1964/z-rclone-mount-applete`
+   - Added keywords: `["rclone", "tray", "system-tray", "mount-manager", "applet"]` (5 keywords for discoverability)
+   - Added categories: `["command-line-utilities", "gui"]` (2 categories for proper classification)
+
+2. **Crates.io Publishing Workflow**
+   - Created `.github/workflows/publish-crates.yml` (45 lines)
+   - Automatically triggered on git tags matching `v*` pattern (e.g., `v0.1.0`)
+   - Uses `dtolnay/rust-toolchain@stable` for reliable Rust setup
+   - Runs `cargo package --allow-dirty` for pre-flight verification
+   - Uses `cargo publish` with token authentication
+   - Includes 15-second delay for Crates.io indexing
+   - Verifies publication with confirmation output
+
+3. **Security & Configuration**
+   - Requires `CARGO_REGISTRY_TOKEN` GitHub secret (user must configure)
+   - Minimal permissions (contents: read only)
+   - Uses continue-on-error for graceful handling of duplicate publishes
+
+**Files Modified:**
+- `Cargo.toml` - Critical metadata additions (repository, documentation, readme, keywords, categories)
+- `.github/workflows/publish-crates.yml` (NEW)
+
+**Commits Created:**
+- `12238e2`: "feat: add Crates.io publishing workflow and complete metadata"
+
+**Impact:**
+- rclone-mount-tray can now be published to Crates.io automatically on release
+- Resolved 3 critical missing fields that blocked Crates.io publishing
+- Automatic Rust documentation generation on docs.rs
+- Professional package metadata with correct classification
+- Comprehensive keyword and category coverage for package discovery
+- Users can install via: `cargo install rclone-mount-tray` (once published)
+
+**Critical Issues Resolved:**
+✅ Repository field now present (was missing)  
+✅ Documentation URL now correct (was missing)  
+✅ Readme field now specified (was missing)  
+✅ Keywords added for discoverability (was missing)  
+✅ Categories added for classification (was missing)  
+
+**Next Steps for Crates.io Deployment:**
+1. Generate Crates.io API token at https://crates.io/me
+2. Add token as `CARGO_REGISTRY_TOKEN` repository secret in GitHub
+3. Tag and push release: `git tag v0.1.0 && git push origin v0.1.0`
+4. Workflow runs automatically and publishes to Crates.io
+5. Verify package appears at https://crates.io/crates/rclone-mount-tray/
+
+---
+
 ## Future Development Priorities
 
-### Priority 4: PyPI Publishing (Python Projects)
-- Publish z-edit to PyPI package index
-- Publish z-open to PyPI package index
-- Create PyPI-specific documentation
-- Set up automated PyPI releases in GitHub Actions
-
-### Priority 5: Crates.io Publishing (Rust Projects)
-- Publish z-kitty-launcher to Crates.io registry
-- Publish z-rclone-mount-applete to Crates.io registry
-- Create Crates.io documentation
-- Set up automated Crates.io releases in GitHub Actions
+### Priority 6: Enhanced Contribution Guidelines
+- Create CONTRIBUTING.md for all projects
+- Standardize code review process
+- Document development workflow
+- Create contributor's guide
 
 ### Priority 6: Enhanced Contribution Guidelines
 - Create CONTRIBUTING.md for all projects
@@ -764,6 +817,6 @@ curl -I https://pilakkat.mywire.org/z-rclone-mount-applete/
 
 ---
 
-**Status Summary**: ✅ Production-ready. GitHub Pages deployed and live. Security audit modernized. Release workflow updated. Cross-project navigation working. SSH+Git fully operational. Ready for PyPI/Crates.io publishing phase.
+**Status Summary**: ✅ Production-ready. GitHub Pages deployed and live. Security audit modernized. Release workflow updated. Crates.io publishing configured. Cross-project navigation working. SSH+Git fully operational. Ready for contribution guidelines phase.
 
-**Last Updated**: April 16, 2026 (GitHub Pages deployment completed + GitHub Actions modernized)
+**Last Updated**: April 16, 2026 (Priority 5: Crates.io publishing workflow added)
