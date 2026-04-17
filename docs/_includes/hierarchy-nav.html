@@ -1,4 +1,4 @@
-{% if site.hierarchy_level %}
+{% if site.hierarchy_level and site.hierarchy_level > 1 %}
   <!-- Site Hierarchy Navigation -->
   <div style="background-color: #f5f5f5; border-bottom: 1px solid #ddd; padding: 12px 0; margin-bottom: 20px;">
     {% if site.hierarchy_parent_url %}
