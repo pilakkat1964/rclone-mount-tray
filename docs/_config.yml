@@ -62,3 +62,7 @@ exclude:
   - scripts
   - data
 
+
+# Site Hierarchy Navigation
+hierarchy_level: 2
+hierarchy_parent_title: "Z-Tools Portfolio"

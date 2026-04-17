@@ -1,0 +1,12 @@
+{% if page.hierarchy_level %}
+  <!-- Site Hierarchy Navigation -->
+  <div style="background-color: #f5f5f5; border-bottom: 1px solid #ddd; padding: 12px 0; margin-bottom: 20px;">
+    {% if page.parent_url %}
+      <div style="padding: 0 15px;">
+        <a href="{{ page.parent_url | relative_url }}" style="color: #0366d6; text-decoration: none; font-size: 14px;">
+          ↑ Up to {{ page.hierarchy_parent_title }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
